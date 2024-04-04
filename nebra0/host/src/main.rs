@@ -2,11 +2,11 @@
 // The ELF is used for proving and the ID is used for verification.
 use ark_bn254::{Bn254, Fr, G1Affine, G2Affine};
 use ark_ec::{pairing::Pairing, AffineRepr};
-use ark_ff::UniformRand;
+use ark_ff::{One, UniformRand};
 use methods::{NEBRA0_GUEST_ELF, NEBRA0_GUEST_ID};
 use rand::rngs::OsRng;
 use risc0_zkvm::{default_prover, ExecutorEnv};
-use shared::HasRepr;
+use shared::{HasRepr, Inputs};
 
 fn main() {
     // Initialize tracing. In order to view logs, run `RUST_LOG=info cargo run`
@@ -29,30 +29,43 @@ fn main() {
     let f1 = Fr::rand(&mut OsRng);
     let f2 = Fr::rand(&mut OsRng);
 
-    // let a1: G1Affine = (G1Affine::generator() * f1).into();
-    // let a2: G2Affine = (G2Affine::generator() * f2).into();
-    // let b1: G1Affine = (G1Affine::generator() * -f2).into();
-    // let b2: G2Affine = (G2Affine::generator() * f1).into();
+    let a1: G1Affine = (G1Affine::generator() * f1).into();
+    let a2: G2Affine = (G2Affine::generator() * f2).into();
+    let b1: G1Affine = (G1Affine::generator() * -f2).into();
+    let b2: G2Affine = (G2Affine::generator() * f1).into();
 
-    // let multi_miller_result = Bn254::multi_miller_loop(&[a1, b1], &[a2, b2]);
-    // let pairing_result = Bn254::final_exponentiation(multi_miller_result);
+    let multi_miller_result = Bn254::multi_miller_loop(&[a1, b1], &[a2, b2]);
+    let pairing_result = Bn254::final_exponentiation(multi_miller_result);
+    if let Some(target_field_value) = pairing_result {
+        assert_eq!(
+            target_field_value.0,
+            <<Bn254 as Pairing>::TargetField as One>::one()
+        );
+    } else {
+        panic!("pairing failed");
+    }
 
-    // println!("a1: {a1:?}");
-    // println!("a2: {a2:?}");
-    // println!("b1: {b1:?}");
-    // println!("b2: {b2:?}");
+    println!("a1: {a1:?}");
+    println!("a2: {a2:?}");
+    println!("b1: {b1:?}");
+    println!("b2: {b2:?}");
     // println!("e(a1,a2).e(b1,b2): {pairing_result:?}");
 
     let f1 = Fr::from(1);
     let f1_repr = f1.to_repr();
-    println!("f1_repr: {f1_repr:?}");
-    println!("f1: {f1:?}");
+    // println!("f1_repr: {f1_repr:?}");
+    // println!("f1: {f1:?}");
+
+    let ab1: G1Affine = (a1 + b1).into();
+    println!("ab1: {ab1:?}");
 
     // For example:
-    let input: (u32, u64, <Fr as HasRepr>::Repr) =
-        (15 * u32::pow(2, 27) + 1, 0xf * u64::pow(2, 60) + 1, f1_repr);
+    // let input: (u32, u64, <Fr as HasRepr>::Repr) =
+    //     (15 * u32::pow(2, 27) + 1, 0xf * u64::pow(2, 60) + 1, f1_repr);
+
+    let inputs: Inputs = (a1.to_repr(), a2.to_repr(), b1.to_repr(), b2.to_repr());
     let env = ExecutorEnv::builder()
-        .write(&input)
+        .write(&inputs)
         .unwrap()
         .build()
         .unwrap();
@@ -66,9 +79,10 @@ fn main() {
     // TODO: Implement code for retrieving receipt journal here.
 
     // For example:
-    let output: (u32, <Fr as HasRepr>::Repr) = receipt.journal.decode().unwrap();
-
-    println!("Inputs: {input:?}, output: {output:?}");
+    // let output: (u32, <Fr as HasRepr>::Repr) = receipt.journal.decode().unwrap();
+    // let output_repr: <G1Affine as HasRepr>::Repr = receipt.journal.decode().unwrap();
+    // let output = G1Affine::from_repr(&output_repr);
+    // println!("Inputs: {inputs:?}, output: {output:?}");
 
     // The receipt was verified at the end of proving, but the below code is 2an
     // example of how someone else could verify this receipt.

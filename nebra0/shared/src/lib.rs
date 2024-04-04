@@ -1,11 +1,11 @@
 #![no_std] // std support is experimental
 
-use ark_bn254::{Bn254, Fr, G1Affine, G2Affine};
-use ark_ec::{pairing::Pairing, AffineRepr};
-use ark_ff::{BigInt, Fp, FpConfig, PrimeField, QuadExtField};
+use ark_bn254::{G1Affine, G2Affine};
+use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
+use ark_ff::{BigInt, Fp, Fp2, Fp2Config, FpConfig, PrimeField};
 
-pub type FpRepr<const N: usize> = [u64; N];
-
+/// An object which has a representation in terms of primitive serializable
+/// objects.
 pub trait HasRepr {
     type Repr;
 
@@ -15,7 +15,7 @@ pub trait HasRepr {
 }
 
 impl<P: FpConfig<N>, const N: usize> HasRepr for Fp<P, N> {
-    type Repr = FpRepr<N>;
+    type Repr = [u64; N];
 
     fn to_repr(&self) -> Self::Repr {
         self.into_bigint().0
@@ -26,43 +26,47 @@ impl<P: FpConfig<N>, const N: usize> HasRepr for Fp<P, N> {
     }
 }
 
-// impl<P: QuadExtConfig> HasRepr for QuadExtField<P> {
-//     type Repr = Fp2Repr<
+impl<P: Fp2Config> HasRepr for Fp2<P>
+where
+    P::Fp: HasRepr,
+{
+    type Repr = [<P::Fp as HasRepr>::Repr; 2];
 
-// #[derive(Deserialize, Serialize)]
+    fn to_repr(&self) -> Self::Repr {
+        [self.c0.to_repr(), self.c1.to_repr()]
+    }
 
-// impl<P: FpConfig<N>, const N: usize> From<&FpRepr<N>> for Fp<P, N> {
-//     fn from(repr: &FpRepr<N>) -> Self {
-//         todo!()
-//     }
-// }
-
-// pub fn fp_from_repr(repr: &FpRepr<N>) -> Fp<P, N> {
-//     Fp::<P, N>::from_bigint(BigInt(*repr)).unwrap()
-// }
-
-// pub fn fp_to_repr<P: FpConfig<N>, const N: usize>(fp: &Fp<P, N>) -> FpRepr<N> {
-//     fp.into_bigint().0
-// }
-
-// #[derive(Deserialize, Serialize)]
-pub type Fp2Repr<const N: usize> = [[u64; N]; 2];
-
-// fn fp2_from_repr<P: FpConfig<N>, const N: usize>(repr: &Fp2Repr<N>) -> Fp<P, N> {
-//     Fp::<P, N>::from_bigint(BigInt(*repr)).unwrap()
-// }
-
-// #[derive(Deserialize, Serialize)]
-pub struct G1Repr {
-    pub x: FpRepr<4>,
-    pub y: FpRepr<4>,
+    fn from_repr(repr: &Self::Repr) -> Self {
+        Self {
+            c0: P::Fp::from_repr(&repr[0]),
+            c1: P::Fp::from_repr(&repr[1]),
+        }
+    }
 }
 
-// #[derive(Deserialize, Serialize)]
-pub struct G2Repr {
-    x: Fp2Repr<4>,
-    y: Fp2Repr<4>,
+impl<P: SWCurveConfig> HasRepr for Affine<P>
+where
+    P::BaseField: HasRepr,
+{
+    type Repr = [<P::BaseField as HasRepr>::Repr; 2];
+
+    fn to_repr(&self) -> Self::Repr {
+        assert!(!self.infinity);
+        [self.x.to_repr(), self.y.to_repr()]
+    }
+
+    fn from_repr(repr: &Self::Repr) -> Self {
+        Self {
+            x: P::BaseField::from_repr(&repr[0]),
+            y: P::BaseField::from_repr(&repr[1]),
+            infinity: false,
+        }
+    }
 }
 
-// #[derive(Deserialize, Serialize)]
-pub struct Inputs {}
+pub type Inputs = (
+    /* a1 */ <G1Affine as HasRepr>::Repr,
+    /* a2 */ <G2Affine as HasRepr>::Repr,
+    /* b1 */ <G1Affine as HasRepr>::Repr,
+    /* b2 */ <G2Affine as HasRepr>::Repr,
+);
