@@ -52,56 +52,56 @@ fn main() {
     let a1 = G1Affine::from_repr(&inputs.0).into_group();
     // let x3 = env::cycle_count();
 
-    // let a2 = G2Affine::from_repr(&inputs.1);
+    let a2 = G2Affine::from_repr(&inputs.1);
     // let x4 = env::cycle_count();
 
     let b1 = G1Affine::from_repr(&inputs.2).into_group();
     // let x5 = env::cycle_count();
 
-    // let b2 = G2Affine::from_repr(&inputs.3);
+    let b2 = G2Affine::from_repr(&inputs.3);
     // let x6 = env::cycle_count();
 
     // Sum G1 points
-    {
-        let x6 = env::cycle_count();
-        // let ab1_vals = sum_vals(a1, b1);
-        let ab1_refs = sum_refs(&a1, &b1);
-        let x7 = env::cycle_count();
+    // {
+    //     // let x6 = env::cycle_count();
+    //     // let ab1_vals = sum_vals(a1, b1);
+    //     let ab1_refs = sum_refs(&a1, &b1);
+    //     // let x7 = env::cycle_count();
 
-        // let x8 = env::cycle_count();
+    //     // let x8 = env::cycle_count();
 
-        // let ab1: G1Affine = ab1_vals.into();
-        let ab1: G1Affine = ab1_refs.into();
+    //     // let ab1: G1Affine = ab1_vals.into();
+    //     let ab1: G1Affine = ab1_refs.into();
 
-        env::commit(&ab1.to_repr());
-        // let x9 = env::cycle_count();
+    //     env::commit(&ab1.to_repr());
+    //     // let x9 = env::cycle_count();
 
-        // println!("cycles1: {x1}");
-        // println!("cycles2: {x2}");
-        // println!("cycles3: {x3}");
-        // println!("cycles4: {x4}");
-        // println!("cycles5: {x5}");
-        println!("cycles6: {x6}");
-        println!("cycles7: {x7}");
-        // println!("cycles8: {x8}");
-        // println!("cycles9: {x9}");
-    }
+    //     // println!("cycles1: {x1}");
+    //     // println!("cycles2: {x2}");
+    //     // println!("cycles3: {x3}");
+    //     // println!("cycles4: {x4}");
+    //     // println!("cycles5: {x5}");
+    //     // println!("cycles6: {x6}");
+    //     // println!("cycles7: {x7}");
+    //     // println!("cycles8: {x8}");
+    //     // println!("cycles9: {x9}");
+    // }
 
     // 2-pairing
-    // {
-    //     let multi_miller_result = Bn254::multi_miller_loop(&[a1, b1], &[a2, b2]);
-    //     let pairing_result = Bn254::final_exponentiation(multi_miller_result);
+    {
+        let multi_miller_result = Bn254::multi_miller_loop(&[a1, b1], &[a2, b2]);
+        let pairing_result = Bn254::final_exponentiation(multi_miller_result);
 
-    //     // Check pairing result
-    //     if let Some(target_field_value) = pairing_result {
-    //         env::commit(&target_field_value.0.c0.c0.c0.to_repr());
+        // Check pairing result
+        if let Some(target_field_value) = pairing_result {
+            env::commit(&target_field_value.0.c0.c0.c0.to_repr());
 
-    //         if target_field_value.0 == <<Bn254 as Pairing>::TargetField as One>::one() {
-    //             env::exit(0)
-    //         }
-    //     }
-    //     env::exit(1);
-    // }
+            // if target_field_value.0 == <<Bn254 as Pairing>::TargetField as One>::one() {
+            //     env::exit(0)
+            // }
+        }
+        // env::exit(1);
+    }
 
     // env::log("f1_repr:");
     // env::write(f1.fmt());

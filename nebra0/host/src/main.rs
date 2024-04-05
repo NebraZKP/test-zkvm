@@ -36,27 +36,27 @@ fn main() {
     let b1: G1Affine = (G1Affine::generator() * -f2).into();
     let b2: G2Affine = (G2Affine::generator() * f1).into();
 
-    {
-        let multi_miller_result = Bn254::multi_miller_loop(&[a1, b1], &[a2, b2]);
-        let pairing_result = Bn254::final_exponentiation(multi_miller_result);
-        if let Some(target_field_value) = pairing_result {
-            let fq12_val = target_field_value.0;
-            let fq12_val_c0 = fq12_val.c0;
-            let fq12_val_c0_c0 = fq12_val_c0.c0;
-            let fq12_val_c0_c0_c0 = fq12_val_c0_c0.c0;
-            assert_eq!(
-                target_field_value.0,
-                <<Bn254 as Pairing>::TargetField as One>::one()
-            );
-        } else {
-            panic!("pairing failed");
-        }
-    }
+    // {
+    //     let multi_miller_result = Bn254::multi_miller_loop(&[a1, b1], &[a2, b2]);
+    //     let pairing_result = Bn254::final_exponentiation(multi_miller_result);
+    //     if let Some(target_field_value) = pairing_result {
+    //         let fq12_val = target_field_value.0;
+    //         let fq12_val_c0 = fq12_val.c0;
+    //         let fq12_val_c0_c0 = fq12_val_c0.c0;
+    //         let fq12_val_c0_c0_c0 = fq12_val_c0_c0.c0;
+    //         assert_eq!(
+    //             target_field_value.0,
+    //             <<Bn254 as Pairing>::TargetField as One>::one()
+    //         );
+    //     } else {
+    //         panic!("pairing failed");
+    //     }
+    // }
 
-    println!("a1: {a1:?}");
-    println!("a2: {a2:?}");
-    println!("b1: {b1:?}");
-    println!("b2: {b2:?}");
+    // println!("a1: {a1:?}");
+    // println!("a2: {a2:?}");
+    // println!("b1: {b1:?}");
+    // println!("b2: {b2:?}");
 
     let inputs: Inputs = (a1.to_repr(), a2.to_repr(), b1.to_repr(), b2.to_repr());
     let env = ExecutorEnv::builder()
@@ -91,22 +91,25 @@ fn main() {
     // println!("Inputs: {inputs:?}, output: {output:?}");
 
     // Sum G1 points
-    {
-        let ab1: G1Affine = (a1 + b1).into();
-        println!("ab1: {ab1:?}");
-        let output_repr: <G1Affine as HasRepr>::Repr = receipt.journal.decode().unwrap();
-        let output = G1Affine::from_repr(&output_repr);
-        println!("Inputs: {inputs:?}, output: {output:?}");
-    }
+    // {
+    //     let output_repr: <G1Affine as HasRepr>::Repr = receipt.journal.decode().unwrap();
+    //     let output = G1Affine::from_repr(&output_repr);
+    //     println!("output: {output:?}");
+
+    //     let ab1: G1Affine = (a1 + b1).into();
+    //     println!("ab1: {ab1:?}");
+    //     assert_eq!(ab1, output);
+    // }
 
     // 2-pairing
-    // {
-    //     let output: <Fq as HasRepr>::Repr = receipt.journal.decode().unwrap();
-    //     let result_0 = Fq::from_repr(&output);
-    //     println!("result_0: {result_0:?}");
-    // }
+    {
+        let output: <Fq as HasRepr>::Repr = receipt.journal.decode().unwrap();
+        let result_0 = Fq::from_repr(&output);
+        println!("result_0: {result_0:?}");
+        assert_eq!(result_0, Fq::one());
+    }
 
     // The receipt was verified at the end of proving, but the below code is 2an
     // example of how someone else could verify this receipt.
-    receipt.verify(NEBRA0_GUEST_ID).unwrap();
+    // receipt.verify(NEBRA0_GUEST_ID).unwrap();
 }

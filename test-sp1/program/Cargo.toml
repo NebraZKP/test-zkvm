@@ -5,4 +5,8 @@ name = "test-sp1-program"
 edition = "2021"
 
 [dependencies]
+ark-bn254 = "0.4.0"
+ark-ec = "0.4.2"
+ark-ff = "0.4.2"
 sp1-zkvm = { git = "https://github.com/succinctlabs/sp1.git" }
+shared = { path = "../../nebra0/shared" }
