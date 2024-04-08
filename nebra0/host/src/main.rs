@@ -31,6 +31,9 @@ fn main() {
     let f1 = Fr::from(13);
     let f2 = Fr::from(27);
 
+    let fqa = -Fr::from(13);
+    let fqb = Fr::from(27);
+
     let a1: G1Affine = (G1Affine::generator() * f1).into();
     let a2: G2Affine = (G2Affine::generator() * f2).into();
     let b1: G1Affine = (G1Affine::generator() * -f2).into();
@@ -60,7 +63,8 @@ fn main() {
 
     let inputs: Inputs = (a1.to_repr(), a2.to_repr(), b1.to_repr(), b2.to_repr());
     let env = ExecutorEnv::builder()
-        .write(&inputs)
+        // .write(&inputs)
+        .write(&[fqa.to_repr(), fqb.to_repr()])
         .unwrap()
         .build()
         .unwrap();
@@ -90,6 +94,14 @@ fn main() {
     // let output = G1Affine::from_repr(&output_repr);
     // println!("Inputs: {inputs:?}, output: {output:?}");
 
+    // Sum Fq values
+    {
+        // let expect = a1.x + a1.y;
+        let expect = fqa * fqb;
+        let output_repr: [u32; 8] = receipt.journal.decode().unwrap();
+        println!("expect: {expect:?}, actual: {output_repr:?}");
+    }
+
     // Sum G1 points
     // {
     //     let output_repr: <G1Affine as HasRepr>::Repr = receipt.journal.decode().unwrap();
@@ -102,12 +114,12 @@ fn main() {
     // }
 
     // 2-pairing
-    {
-        let output: <Fq as HasRepr>::Repr = receipt.journal.decode().unwrap();
-        let result_0 = Fq::from_repr(&output);
-        println!("result_0: {result_0:?}");
-        assert_eq!(result_0, Fq::one());
-    }
+    // {
+    //     let output: <Fq as HasRepr>::Repr = receipt.journal.decode().unwrap();
+    //     let result_0 = Fq::from_repr(&output);
+    //     println!("result_0: {result_0:?}");
+    //     assert_eq!(result_0, Fq::one());
+    // }
 
     // The receipt was verified at the end of proving, but the below code is 2an
     // example of how someone else could verify this receipt.

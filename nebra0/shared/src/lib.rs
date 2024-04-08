@@ -4,6 +4,8 @@ use ark_bn254::{G1Affine, G2Affine};
 use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
 use ark_ff::{BigInt, Fp, Fp2, Fp2Config, FpConfig, PrimeField};
 
+pub mod field;
+
 /// An object which has a representation in terms of primitive serializable
 /// objects.
 pub trait HasRepr {
