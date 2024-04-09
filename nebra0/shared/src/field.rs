@@ -11,7 +11,7 @@ pub fn split_u64(v: u64) -> (u32, u32) {
     (v as u32, (v >> 32) as u32)
 }
 
-pub fn from_u64s(data: &[u64; 4]) -> U256 {
+pub fn u256_from_u64s(data: &[u64; 4]) -> U256 {
     #[cfg(target_pointer_width = "32")]
     {
         let (w00, w01) = split_u64(data[0]);

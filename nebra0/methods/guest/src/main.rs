@@ -10,7 +10,7 @@ use ark_ec::{pairing::Pairing, AffineRepr};
 use ark_ff::One;
 use risc0_zkvm::guest::env;
 use shared::{
-    field::{add_mod_q, from_u64s, Q},
+    field::{add_mod_q, u256_from_u64s, Q},
     HasRepr, Inputs,
 };
 // use serde::{Deserialize, Serialize};
@@ -59,8 +59,8 @@ fn main() {
 
     let a1_x = Fq::from_repr(&inputs[0]);
     let a1_y = Fq::from_repr(&inputs[1]);
-    let a1_x_bigint = from_u64s(&inputs[0]);
-    let a1_y_bigint = from_u64s(&inputs[1]);
+    let a1_x_bigint = u256_from_u64s(&inputs[0]);
+    let a1_y_bigint = u256_from_u64s(&inputs[1]);
 
     // let a1 = G1Affine::from_repr(&inputs.0).into_group();
     // let a1_x_bigint = from_u64s(&inputs.0[0]);

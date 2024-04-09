@@ -31,8 +31,8 @@ fn main() {
     let f1 = Fr::from(13);
     let f2 = Fr::from(27);
 
-    let fqa = -Fr::from(13);
-    let fqb = Fr::from(27);
+    let fqa = -Fq::from(13);
+    let fqb = Fq::from(27);
 
     let a1: G1Affine = (G1Affine::generator() * f1).into();
     let a2: G2Affine = (G2Affine::generator() * f2).into();
@@ -61,10 +61,10 @@ fn main() {
     // println!("b1: {b1:?}");
     // println!("b2: {b2:?}");
 
-    let inputs: Inputs = (a1.to_repr(), a2.to_repr(), b1.to_repr(), b2.to_repr());
+    // let inputs: Inputs = (a1.to_repr(), a2.to_repr(), b1.to_repr(), b2.to_repr());
+    let inputs = [fqa.to_repr(), fqb.to_repr()];
     let env = ExecutorEnv::builder()
-        // .write(&inputs)
-        .write(&[fqa.to_repr(), fqb.to_repr()])
+        .write(&inputs)
         .unwrap()
         .build()
         .unwrap();
@@ -98,8 +98,10 @@ fn main() {
     {
         // let expect = a1.x + a1.y;
         let expect = fqa * fqb;
-        let output_repr: [u32; 8] = receipt.journal.decode().unwrap();
-        println!("expect: {expect:?}, actual: {output_repr:?}");
+        let output_repr: [u64; 4] = receipt.journal.decode().unwrap();
+        // let output_repr: [u32; 8] = receipt.journal.decode().unwrap();
+
+        println!("expect: {expect:?}: {output_repr:?}",);
     }
 
     // Sum G1 points
