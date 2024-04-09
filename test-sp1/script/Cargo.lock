@@ -2804,6 +2804,7 @@ dependencies = [
  "ark-bn254",
  "ark-ec",
  "ark-ff",
+ "crypto-bigint",
 ]
 
 [[package]]

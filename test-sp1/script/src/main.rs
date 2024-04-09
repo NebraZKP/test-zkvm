@@ -58,21 +58,21 @@ fn main() {
     };
 
     // Sum G1 points and check
-    // {
-    //     let output_repr: <G1Affine as HasRepr>::Repr = public_values.read();
-    //     let output = G1Affine::from_repr(&output_repr);
-    //     println!("output: {output:?}");
+    {
+        let output_repr: <G1Affine as HasRepr>::Repr = public_values.read();
+        let output = G1Affine::from_repr(&output_repr);
+        println!("output: {output:?}");
 
-    //     let ab1: G1Affine = (a1 + b1).into();
-    //     println!("ab1: {ab1:?}");
-    //     assert_eq!(ab1, output);
-    // }
+        let ab1: G1Affine = (a1 + b1).into();
+        println!("ab1: {ab1:?}");
+        assert_eq!(ab1, output);
+    }
 
     // 2-pairing
-    {
-        let output: <Fq as HasRepr>::Repr = public_values.read();
-        let result_0 = Fq::from_repr(&output);
-        println!("result_0: {result_0:?}");
-        assert_eq!(result_0, Fq::one());
-    }
+    // {
+    //     let output: <Fq as HasRepr>::Repr = public_values.read();
+    //     let result_0 = Fq::from_repr(&output);
+    //     println!("result_0: {result_0:?}");
+    //     assert_eq!(result_0, Fq::one());
+    // }
 }
