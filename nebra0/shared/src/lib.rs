@@ -1,6 +1,6 @@
 #![no_std] // std support is experimental
 
-use ark_bn254::{G1Affine, G2Affine};
+use ark_bn254::{Fq, G1Affine, G2Affine};
 use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
 use ark_ff::{BigInt, Fp, Fp2, Fp2Config, FpConfig, PrimeField};
 
@@ -66,9 +66,23 @@ where
     }
 }
 
+pub fn fp_from_u32s<P: FpConfig<4>>(values: &[u32; 8]) -> Fp<P, 4>
+where
+    Fp<P, 4>: HasRepr<Repr = [u64; 4]>,
+{
+    let u64s = [
+        (values[0] as u64) + ((values[1] as u64) << 32),
+        (values[2] as u64) + ((values[3] as u64) << 32),
+        (values[4] as u64) + ((values[5] as u64) << 32),
+        (values[6] as u64) + ((values[7] as u64) << 32),
+    ];
+    <Fp<P, 4> as HasRepr>::from_repr(&u64s)
+}
+
 pub type Inputs = (
     /* a1 */ <G1Affine as HasRepr>::Repr,
     /* a2 */ <G2Affine as HasRepr>::Repr,
     /* b1 */ <G1Affine as HasRepr>::Repr,
     /* b2 */ <G2Affine as HasRepr>::Repr,
+    /* witness b1.x - a1.x */ <Fq as HasRepr>::Repr,
 );

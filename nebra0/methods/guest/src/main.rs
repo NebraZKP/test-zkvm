@@ -7,10 +7,10 @@ use crypto_bigint::risc0;
 
 use ark_bn254::{Bn254, Fq, G1Affine, G1Projective, G2Affine, G2Projective};
 use ark_ec::{pairing::Pairing, AffineRepr};
-use ark_ff::One;
+use ark_ff::{Field, One};
 use risc0_zkvm::guest::env;
 use shared::{
-    field::{add_mod_q, u256_from_u64s, Q},
+    field::{add_mod_q, inv_mod_q, u256_from_u64s, MyFq, Q},
     HasRepr, Inputs,
 };
 // use serde::{Deserialize, Serialize};
@@ -51,18 +51,21 @@ fn main() {
     // let result0: u32 = input.0 ^ ((input.1 >> 32) as u32) ^ (input.1 as u32);
     // let result1: Fr = f1 + f1;
 
-    // let inputs: Inputs = env::read();
-    let inputs: [<Fq as HasRepr>::Repr; 2] = env::read();
+    let inputs: Inputs = env::read();
+    // let inputs: [<Fq as HasRepr>::Repr; 2] = env::read();
 
     // let x1 = env::cycle_count();
     // let x2 = env::cycle_count();
 
-    let a1_x = Fq::from_repr(&inputs[0]);
-    let a1_y = Fq::from_repr(&inputs[1]);
-    let a1_x_bigint = u256_from_u64s(&inputs[0]);
-    let a1_y_bigint = u256_from_u64s(&inputs[1]);
+    let a1_x_bigint = u256_from_u64s(&inputs.0[0]);
+    let a1_y_bigint = u256_from_u64s(&inputs.0[1]);
 
-    // let a1 = G1Affine::from_repr(&inputs.0).into_group();
+    let a1_x_residue = MyFq::new(&a1_x_bigint);
+    let a1_y_residue = MyFq::new(&a1_y_bigint);
+
+    let a1 = G1Affine::from_repr(&inputs.0).into_group();
+    let a1_x = a1.x;
+    let a1_y = a1.y;
     // let a1_x_bigint = from_u64s(&inputs.0[0]);
     // let a1_y_bigint = from_u64s(&inputs.0[1]);
     // // let x3 = env::cycle_count();
@@ -70,56 +73,79 @@ fn main() {
     // let a2 = G2Affine::from_repr(&inputs.1);
     // // let x4 = env::cycle_count();
 
-    // let b1 = G1Affine::from_repr(&inputs.2).into_group();
+    let b1 = G1Affine::from_repr(&inputs.2).into_group();
     // // let x5 = env::cycle_count();
 
     // let b2 = G2Affine::from_repr(&inputs.3);
     // // let x6 = env::cycle_count();
 
-    // Sum Fq values
-    {
-        // Naive
-        // let r_naive = a1.x + a1.y;
+    // Invert input[0]
+    // {
+    //     let x6 = env::cycle_count();
 
+    //     let r = a1_x.inverse().unwrap();
+    //     // let r = inv_mod_q(&a1_x_bigint);
+    //     // let (r, _) = a1_x_residue.invert();
+
+    //     let x7 = env::cycle_count();
+
+    //     // env::commit(&r.as_montgomery().to_words());
+    //     // env::commit(&r.to_words());
+    //     env::commit(&r.to_repr());
+
+    //     println!("cycles: {}", x7 - x6);
+    // }
+
+    // Mul Fq values
+    // {
+    //     let x6 = env::cycle_count();
+
+    //     // Naive
+    //     let r_naive = a1_x * a1_y;
+    //     // let r_naive_0 = a1_y * a1_x;
+    //     // let r_naive_1 = a1_x * r_naive_0;
+    //     // let r_naive_2 = a1_x * r_naive_1;
+    //     // let r_naive_3 = a1_x * r_naive_2;
+
+    //     // let r = mul_mod_q(&a1_x_bigint, &a1_y_bigint);
+
+    //     // Syscall
+    //     // let r = risc0::modmul_u256(&a1_x_bigint, &a1_y_bigint, &Q);
+
+    //     // Syscall via Residue
+    //     // let r = a1_x_residue * a1_y_residue;
+
+    //     let x7 = env::cycle_count();
+
+    //     // env::commit(&r.as_montgomery().to_words());
+    //     // env::commit(&r.to_words());
+    //     env::commit(&r_naive.to_repr());
+    //     env::commit(&r_naive_0.to_repr());
+    //     env::commit(&r_naive_1.to_repr());
+    //     env::commit(&r_naive_2.to_repr());
+    //     env::commit(&r_naive_3.to_repr());
+
+    //     println!("cycles: {}", x7 - x6);
+    // }
+
+    // Sum G1 points
+    {
         let x6 = env::cycle_count();
 
-        let r = a1_x * a1_y;
-        // let r = mul_mod_q(&a1_x_bigint, &a1_y_bigint);
-        // let r = risc0::modmul_u256(&a1_x_bigint, &a1_y_bigint, &Q);
+        // let ab1_vals = sum_vals(a1, b1);
+        let ab1_refs = sum_refs(&a1, &b1);
 
         let x7 = env::cycle_count();
 
-        // env::commit(&r.to_words());
-        env::commit(&r.to_repr());
+        // let x8 = env::cycle_count();
 
+        // let ab1: G1Affine = ab1_vals.into();
+        let ab1: G1Affine = ab1_refs.into();
+
+        env::commit(&ab1.to_repr());
+        // let x9 = env::cycle_count();
         println!("cycles: {}", x7 - x6);
     }
-
-    // Sum G1 points
-    // {
-    //     // let x6 = env::cycle_count();
-    //     // let ab1_vals = sum_vals(a1, b1);
-    //     let ab1_refs = sum_refs(&a1, &b1);
-    //     // let x7 = env::cycle_count();
-
-    //     // let x8 = env::cycle_count();
-
-    //     // let ab1: G1Affine = ab1_vals.into();
-    //     let ab1: G1Affine = ab1_refs.into();
-
-    //     env::commit(&ab1.to_repr());
-    //     // let x9 = env::cycle_count();
-
-    //     // println!("cycles1: {x1}");
-    //     // println!("cycles2: {x2}");
-    //     // println!("cycles3: {x3}");
-    //     // println!("cycles4: {x4}");
-    //     // println!("cycles5: {x5}");
-    //     // println!("cycles6: {x6}");
-    //     // println!("cycles7: {x7}");
-    //     // println!("cycles8: {x8}");
-    //     // println!("cycles9: {x9}");
-    // }
 
     // 2-pairing
     // {

@@ -2,11 +2,11 @@
 // The ELF is used for proving and the ID is used for verification.
 use ark_bn254::{Bn254, Fq, Fr, G1Affine, G2Affine};
 use ark_ec::{pairing::Pairing, AffineRepr};
-use ark_ff::{One, UniformRand};
+use ark_ff::{Field, One, UniformRand};
 use methods::{NEBRA0_GUEST_ELF, NEBRA0_GUEST_ID};
 use rand::rngs::OsRng;
 use risc0_zkvm::{default_prover, ExecutorEnv};
-use shared::{HasRepr, Inputs};
+use shared::{fp_from_u32s, HasRepr, Inputs};
 
 fn main() {
     // Initialize tracing. In order to view logs, run `RUST_LOG=info cargo run`
@@ -61,8 +61,14 @@ fn main() {
     // println!("b1: {b1:?}");
     // println!("b2: {b2:?}");
 
-    // let inputs: Inputs = (a1.to_repr(), a2.to_repr(), b1.to_repr(), b2.to_repr());
-    let inputs = [fqa.to_repr(), fqb.to_repr()];
+    let inputs: Inputs = (
+        a1.to_repr(),
+        a2.to_repr(),
+        b1.to_repr(),
+        b2.to_repr(),
+        (b1.x - a1.x).to_repr(),
+    );
+    // let inputs = [fqa.to_repr(), fqb.to_repr()];
     let env = ExecutorEnv::builder()
         .write(&inputs)
         .unwrap()
@@ -94,26 +100,36 @@ fn main() {
     // let output = G1Affine::from_repr(&output_repr);
     // println!("Inputs: {inputs:?}, output: {output:?}");
 
-    // Sum Fq values
-    {
-        // let expect = a1.x + a1.y;
-        let expect = fqa * fqb;
-        let output_repr: [u64; 4] = receipt.journal.decode().unwrap();
-        // let output_repr: [u32; 8] = receipt.journal.decode().unwrap();
+    // Invert input[0]
+    // {
+    //     let expect = fqa.inverse().unwrap();
+    //     let output_repr: [u32; 8] = receipt.journal.decode().unwrap();
+    //     let actual: Fq = fp_from_u32s(&output_repr);
+    //     assert_eq!(expect, actual);
+    //     println!("expect: {expect:?}: {actual:?}",);
+    // }
 
-        println!("expect: {expect:?}: {output_repr:?}",);
-    }
+    // Mul Fq values
+    // {
+    //     let expect = a1.x * a1.y;
+    //     // let expect = fqa * fqb;
+    //     // let output_repr: [u64; 4] = receipt.journal.decode().unwrap();
+    //     let output_repr: [u32; 8] = receipt.journal.decode().unwrap();
+    //     let actual: Fq = fp_from_u32s(&output_repr);
+    //     assert_eq!(expect, actual);
+    //     println!("expect: {expect:?}: {actual:?}",);
+    // }
 
     // Sum G1 points
-    // {
-    //     let output_repr: <G1Affine as HasRepr>::Repr = receipt.journal.decode().unwrap();
-    //     let output = G1Affine::from_repr(&output_repr);
-    //     println!("output: {output:?}");
+    {
+        let output_repr: <G1Affine as HasRepr>::Repr = receipt.journal.decode().unwrap();
+        let output = G1Affine::from_repr(&output_repr);
+        println!("output: {output:?}");
 
-    //     let ab1: G1Affine = (a1 + b1).into();
-    //     println!("ab1: {ab1:?}");
-    //     assert_eq!(ab1, output);
-    // }
+        let ab1: G1Affine = (a1 + b1).into();
+        println!("ab1: {ab1:?}");
+        assert_eq!(ab1, output);
+    }
 
     // 2-pairing
     // {
