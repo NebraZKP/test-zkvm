@@ -26,6 +26,43 @@ fn sum_vals(a: G1Projective, b: G1Projective) -> G1Projective {
     a + b
 }
 
+fn g1_add(a: &[MyFq; 2], b: &[MyFq; 2]) -> [MyFq; 2] {
+    let x1 = &a[0];
+    let y1 = &a[1];
+    let x2 = &b[0];
+    let y2 = &b[1];
+
+    let x2_minus_x1 = x2 - x1;
+    let (x2_minus_x1_inv, _) = x2_minus_x1.invert();
+    let lambda = (y2 - y1) * x2_minus_x1_inv;
+    let lambda_squared = lambda * lambda;
+
+    let xr = lambda_squared - x1 - x2;
+    let yr = lambda * (x1 - xr) - y1;
+
+    [xr, yr]
+}
+
+fn g1_add_with_hint(a: &[MyFq; 2], b: &[MyFq; 2], x2_minus_x1_inv: &MyFq) -> [MyFq; 2] {
+    let x1 = &a[0];
+    let y1 = &a[1];
+    let x2 = &b[0];
+    let y2 = &b[1];
+
+    let x2_minus_x1 = x2 - x1;
+    if x2_minus_x1 * x2_minus_x1_inv != MyFq::ONE {
+        panic!("invalid hint");
+    }
+
+    let lambda = (y2 - y1) * x2_minus_x1_inv;
+    let lambda_squared = lambda * lambda;
+
+    let xr = lambda_squared - x1 - x2;
+    let yr = lambda * (x1 - xr) - y1;
+
+    [xr, yr]
+}
+
 fn main() {
     // TODO: Implement your guest code here
 
@@ -52,32 +89,26 @@ fn main() {
     // let result1: Fr = f1 + f1;
 
     let inputs: Inputs = env::read();
-    // let inputs: [<Fq as HasRepr>::Repr; 2] = env::read();
 
-    // let x1 = env::cycle_count();
-    // let x2 = env::cycle_count();
+    let a1 = G1Affine::from_repr(&inputs.0).into_group();
+    let a2 = G2Affine::from_repr(&inputs.1).into_group();
+    let b1 = G1Affine::from_repr(&inputs.2).into_group();
+    let b2 = G2Affine::from_repr(&inputs.3).into_group();
 
     let a1_x_bigint = u256_from_u64s(&inputs.0[0]);
     let a1_y_bigint = u256_from_u64s(&inputs.0[1]);
 
     let a1_x_residue = MyFq::new(&a1_x_bigint);
     let a1_y_residue = MyFq::new(&a1_y_bigint);
+    let b1_x_residue = MyFq::new(&u256_from_u64s(&inputs.2[0]));
+    let b1_y_residue = MyFq::new(&u256_from_u64s(&inputs.2[1]));
 
-    let a1 = G1Affine::from_repr(&inputs.0).into_group();
+    let a1_residue = [a1_x_residue, a1_y_residue];
+    let b1_residue = [b1_x_residue, b1_y_residue];
+    let a1_plus_b1_hint = MyFq::new(&u256_from_u64s(&inputs.4));
+
     let a1_x = a1.x;
     let a1_y = a1.y;
-    // let a1_x_bigint = from_u64s(&inputs.0[0]);
-    // let a1_y_bigint = from_u64s(&inputs.0[1]);
-    // // let x3 = env::cycle_count();
-
-    // let a2 = G2Affine::from_repr(&inputs.1);
-    // // let x4 = env::cycle_count();
-
-    let b1 = G1Affine::from_repr(&inputs.2).into_group();
-    // // let x5 = env::cycle_count();
-
-    // let b2 = G2Affine::from_repr(&inputs.3);
-    // // let x6 = env::cycle_count();
 
     // Invert input[0]
     // {
@@ -131,26 +162,35 @@ fn main() {
     // Sum G1 points
     {
         let x6 = env::cycle_count();
+        // ark_bn254 (refs)
+        let ab1_refs = sum_refs(&a1, &b1);
 
         // let ab1_vals = sum_vals(a1, b1);
-        let ab1_refs = sum_refs(&a1, &b1);
+
+        // With Residue
+
+        // let ab_residue = g1_add(&a1_residue, &b1_residue);
+        // let ab_residue = g1_add_with_hint(&a1_residue, &b1_residue, &a1_plus_b1_hint);
 
         let x7 = env::cycle_count();
 
-        // let x8 = env::cycle_count();
-
-        // let ab1: G1Affine = ab1_vals.into();
         let ab1: G1Affine = ab1_refs.into();
-
         env::commit(&ab1.to_repr());
-        // let x9 = env::cycle_count();
+
+        // env::commit(&[
+        //     ab_residue[0].as_montgomery().to_words(),
+        //     ab_residue[1].as_montgomery().to_words(),
+        // ]);
+
         println!("cycles: {}", x7 - x6);
     }
 
     // 2-pairing
     // {
+    //     let x6 = env::cycle_count();
     //     let multi_miller_result = Bn254::multi_miller_loop(&[a1, b1], &[a2, b2]);
     //     let pairing_result = Bn254::final_exponentiation(multi_miller_result);
+    //     let x7 = env::cycle_count();
 
     //     // Check pairing result
     //     if let Some(target_field_value) = pairing_result {
@@ -161,6 +201,8 @@ fn main() {
     //         // }
     //     }
     //     // env::exit(1);
+
+    //     println!("cycles: {}", x7 - x6);
     // }
 
     // env::log("f1_repr:");
