@@ -1,0 +1,1 @@
+RUSTFLAGS="-C link-arg=-T/tmp/jolt-guest-linkers/guest.ld" cargo build --release --features guest -p guest --target-dir /tmp/jolt-guest-target-guest-what_the_fuck_am_i_doing_here --target riscv32i-unknown-none-elf --bin guest
