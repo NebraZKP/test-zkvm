@@ -163,14 +163,14 @@ fn main() {
     {
         let x6 = env::cycle_count();
         // ark_bn254 (refs)
-        let ab1_refs = sum_refs(&a1, &b1);
+        // let ab1_refs = sum_refs(&a1, &b1);
 
         // let ab1_vals = sum_vals(a1, b1);
 
         // With Residue
 
         // let ab_residue = g1_add(&a1_residue, &b1_residue);
-        // let ab_residue = g1_add_with_hint(&a1_residue, &b1_residue, &a1_plus_b1_hint);
+        let ab_residue = g1_add_with_hint(&a1_residue, &b1_residue, &a1_plus_b1_hint);
 
         let x7 = env::cycle_count();
 

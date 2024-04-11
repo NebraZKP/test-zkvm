@@ -84,5 +84,5 @@ pub type Inputs = (
     /* a2 */ <G2Affine as HasRepr>::Repr,
     /* b1 */ <G1Affine as HasRepr>::Repr,
     /* b2 */ <G2Affine as HasRepr>::Repr,
-    /* witness b1.x - a1.x */ <Fq as HasRepr>::Repr,
+    /* witness (b1.x - a1.x)^-1 */ <Fq as HasRepr>::Repr,
 );
