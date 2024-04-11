@@ -1,0 +1,3 @@
+[submodule "ahash"]
+	path = ahash
+	url = ../aHash.git
