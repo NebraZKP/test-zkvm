@@ -35,6 +35,8 @@ pub fn main() {
             guest::execute_ec_ops(inputs)
         } else {
             let (prove_ec_ops, verify_ec_ops) = guest::build_ec_ops();
+            println!("built");
+
             let now = Instant::now();
             let (output, proof) = prove_ec_ops(inputs);
             println!("prove took {:?}", now.elapsed());
@@ -48,8 +50,8 @@ pub fn main() {
     // G1 Sum
     {
         let out = G1Affine::from_repr(&output);
-        // let expect: G1Affine = (a1 + b1 * Fr::from(100)).into();
-        let expect: G1Affine = (a1 + b1).into();
+        let expect: G1Affine = (a1 + b1 * Fr::from(3)).into();
+        // let expect: G1Affine = (a1 + b1).into();
         println!("out={out:?}");
         println!("expect={expect:?}");
         assert_eq!(expect, out);

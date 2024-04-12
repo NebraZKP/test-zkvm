@@ -25,4 +25,5 @@ ark-ec = "0.4.2"
 ark-ff = { git = "https://github.com/a16z/arkworks-algebra", branch = "optimize/field-from-u64" }
 ark-ec = { git = "https://github.com/a16z/arkworks-algebra", branch = "optimize/field-from-u64" }
 ark-serialize = { git = "https://github.com/a16z/arkworks-algebra", branch = "optimize/field-from-u64" }
+# ahash = { git = "https://github.com/nebrazkp/ahash", branch = "jolt" }
 ahash = { path = "../ahash" }
