@@ -178,7 +178,7 @@ fn main() {
 
     // G1 (affine) add * 10
     {
-        const NUM_ITERATIONS: u32 = 1;
+        const NUM_ITERATIONS: u32 = 10;
 
         // ark_bn256
         {

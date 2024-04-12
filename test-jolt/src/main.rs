@@ -45,36 +45,35 @@ pub fn main() {
     };
     println!("output: {:?}", output);
 
+    // TO SELECT AN EXPERIMENT:
+    // - comment/uncomment the appropriate code block
+    // - see guest-side lib.rs and make the equivalent change
+
     // Sum multiple G1 points
-    {
-        // Must be consistent with guest-side lib.rs
-        // (2 works, 3 breaks)
-        const NUM_ITERATIONS: u32 = 3;
+    // {
+    //     // Must be consistent with guest-side lib.rs
+    //     // (2 works, 3 breaks)
+    //     const NUM_ITERATIONS: u32 = 10;
 
-        let expect = {
-            let now = Instant::now();
-            let ab1: G1Affine = (a1 + b1 * Fr::from(NUM_ITERATIONS)).into();
-            let elapsed = now.elapsed();
-            println!("native G1 add: {elapsed:?}");
-            ab1
-        };
+    //     let expect = {
+    //         let now = Instant::now();
+    //         let ab1: G1Affine = (a1 + b1 * Fr::from(NUM_ITERATIONS)).into();
+    //         let elapsed = now.elapsed();
+    //         println!("native G1 add: {elapsed:?}");
+    //         ab1
+    //     };
 
-        let output = G1Affine::from_repr(&output);
-        println!("output: {output:?}");
+    //     let output = G1Affine::from_repr(&output);
+    //     println!("output: {output:?}");
 
-        println!("expect: {expect:?}");
-        assert_eq!(expect, output);
-    }
-
-    // TO RUN THIS EXPERIMENT INSTEAD:
-    // - comment the above code block
-    // - uncomment this code block
-    // - see guest-side lib.rs and make the equivalent changes
+    //     println!("expect: {expect:?}");
+    //     assert_eq!(expect, output);
+    // }
 
     // 2-pairing
-    // {
-    //     let result_0 = Fq::from_repr(&output);
-    //     println!("result_0: {result_0:?}");
-    //     assert_eq!(result_0, Fq::one());
-    // }
+    {
+        let result_0 = Fq::from_repr(&output);
+        println!("result_0: {result_0:?}");
+        assert_eq!(result_0, Fq::one());
+    }
 }
