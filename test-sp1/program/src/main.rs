@@ -6,16 +6,8 @@ sp1_zkvm::entrypoint!(main);
 use ark_bn254::{Bn254, G1Affine, G1Projective, G2Affine, G2Projective};
 use ark_ec::{pairing::Pairing, AffineRepr};
 use ark_ff::One;
-use shared::{HasRepr, Inputs};
+use shared::{g1_add_refs_affine, HasRepr, Inputs};
 use sp1_zkvm::syscalls::syscall_bn254_add;
-
-fn sum_refs(a: &G1Projective, b: &G1Projective) -> G1Projective {
-    a + b
-}
-
-fn sum_vals(a: G1Projective, b: G1Projective) -> G1Projective {
-    a + b
-}
 
 pub fn main() {
     // // NOTE: values of n larger than 186 will overflow the u128 type,
@@ -35,40 +27,90 @@ pub fn main() {
     // sp1_zkvm::io::commit(&b);
 
     let inputs: Inputs = sp1_zkvm::io::read();
-    let a1 = G1Affine::from_repr(&inputs.0).into_group(); /* .into_group() */
-    let a2 = G2Affine::from_repr(&inputs.1).into_group();
-    let b1 = G1Affine::from_repr(&inputs.2).into_group();
-    let b2 = G2Affine::from_repr(&inputs.3).into_group();
+    let a1 = G1Affine::from_repr(&inputs.0);
+    let a2 = G2Affine::from_repr(&inputs.1);
+    let b1 = G1Affine::from_repr(&inputs.2);
+    let b2 = G2Affine::from_repr(&inputs.3);
 
     // Sum G1 points
+    // {
+    //     // let a1_proj: G1Projective = a1.into();
+    //     // let b1_proj: G1Projective = b1.into();
+
+    //     // println!("cycle-tracker-start: G1 add proj (ark_bn254)");
+    //     // let ab1_refs = sum_refs(&a1, &b1);
+    //     // println!("cycle-tracker-end: G1 add proj (ark_bn254)");
+    //     // let ab1: G1Affine = ab1_refs.into();
+    //     // sp1_zkvm::io::commit(&ab1.to_repr());
+
+    //     println!("cycle-tracker-start: G1 add affine (ark_bn254)");
+    //     let ab1_refs = add_g1_refs_affine(&a1, &b1);
+    //     let ab1: G1Affine = ab1_refs.into();
+    //     println!("cycle-tracker-end: G1 add affine (ark_bn254)");
+    //     sp1_zkvm::io::commit(&ab1.to_repr());
+
+    //     // let mut ab1: G1Affine = a1.clone();
+    //     // let mut b1_copy: G1Affine = b1.clone();
+
+    //     // let mut a1_data = inputs.0;
+    //     // let mut b1_data = inputs.2;
+
+    //     // println!("cycle-tracker-start: G1 add (syscall)");
+    //     // let mut a1_ptr: *mut u64 = &mut a1_data[0][0];
+    //     // let mut b1_ptr: *mut u64 = &mut b1_data[0][0];
+    //     // unsafe {
+    //     //     syscall_bn254_add(a1_ptr as *mut u32, b1_ptr as *mut u32);
+    //     // }
+    //     // println!("cycle-tracker-end: G1 add (syscall)");
+
+    //     // sp1_zkvm::io::commit(&a1_data);
+    // }
+
+    // G1 (affine) add * 10
     {
-        // println!("cycle-tracker-start: G1 add proj (ark_bn254)");
-        // let ab1_refs = sum_refs(&a1, &b1);
-        // println!("cycle-tracker-end: G1 add proj (ark_bn254)");
-        // let ab1: G1Affine = ab1_refs.into();
-        // sp1_zkvm::io::commit(&ab1.to_repr());
+        const NUM_ITERATIONS: u32 = 10;
 
-        println!("cycle-tracker-start: G1 add affine (ark_bn254)");
-        let ab1_refs = sum_refs(&a1, &b1);
-        let ab1: G1Affine = ab1_refs.into();
-        println!("cycle-tracker-end: G1 add affine (ark_bn254)");
-        sp1_zkvm::io::commit(&ab1.to_repr());
+        // ark_bn256 (affine)
+        {
+            let mut ab_sum = a1;
+            println!(
+                "cycle-tracker-start: G1 add {} pts affine (ark_bn254)",
+                NUM_ITERATIONS
+            );
+            for _ in 0..NUM_ITERATIONS {
+                ab_sum = g1_add_refs_affine(&ab_sum, &b1);
+            }
+            println!(
+                "cycle-tracker-end: G1 add {} pts affine (ark_bn254)",
+                NUM_ITERATIONS
+            );
 
-        // let mut ab1: G1Affine = a1.clone();
-        // let mut b1_copy: G1Affine = b1.clone();
+            sp1_zkvm::io::commit(&ab_sum.to_repr());
+        }
 
-        // let mut a1_data = inputs.0;
-        // let mut b1_data = inputs.2;
+        // syscall
+        // {
+        //     let mut a1_data = inputs.0;
+        //     let mut b1_data = inputs.2;
+        //     let mut a1_ptr: *mut u64 = &mut a1_data[0][0];
+        //     let mut b1_ptr: *mut u64 = &mut b1_data[0][0];
 
-        // println!("cycle-tracker-start: G1 add (syscall)");
-        // let mut a1_ptr: *mut u64 = &mut a1_data[0][0];
-        // let mut b1_ptr: *mut u64 = &mut b1_data[0][0];
-        // unsafe {
-        //     syscall_bn254_add(a1_ptr as *mut u32, b1_ptr as *mut u32);
+        //     println!(
+        //         "cycle-tracker-start: G1 add {} pts affine (syscall)",
+        //         NUM_ITERATIONS
+        //     );
+        //     for _ in 0..NUM_ITERATIONS {
+        //         unsafe {
+        //             syscall_bn254_add(a1_ptr as *mut u32, b1_ptr as *mut u32);
+        //         }
+        //     }
+
+        //     println!(
+        //         "cycle-tracker-end: G1 add {} pts affine (syscall)",
+        //         NUM_ITERATIONS
+        //     );
+        //     sp1_zkvm::io::commit(&a1_data);
         // }
-        // println!("cycle-tracker-end: G1 add (syscall)");
-
-        // sp1_zkvm::io::commit(&a1_data);
     }
 
     // 2-pairing

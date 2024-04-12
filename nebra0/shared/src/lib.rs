@@ -1,6 +1,6 @@
 #![no_std] // std support is experimental
 
-use ark_bn254::{Fq, G1Affine, G2Affine};
+use ark_bn254::{Fq, G1Affine, G1Projective, G2Affine};
 use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
 use ark_ff::{BigInt, Fp, Fp2, Fp2Config, FpConfig, PrimeField};
 
@@ -86,3 +86,19 @@ pub type Inputs = (
     /* b2 */ <G2Affine as HasRepr>::Repr,
     /* witness (b1.x - a1.x)^-1 */ <Fq as HasRepr>::Repr,
 );
+
+pub fn g1_add_refs_proj(a: &G1Projective, b: &G1Projective) -> G1Projective {
+    a + b
+}
+
+pub fn g1_add_vals_proj(a: G1Projective, b: G1Projective) -> G1Projective {
+    a + b
+}
+
+pub fn g1_add_refs_affine(a: &G1Affine, b: &G1Affine) -> G1Affine {
+    (*a + b).into()
+}
+
+pub fn g1_add_vals_affine(a: G1Affine, b: G1Affine) -> G1Affine {
+    (a + b).into()
+}

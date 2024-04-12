@@ -7,8 +7,6 @@ use jolt::{host::Program, JoltPreprocessing};
 use shared::{HasRepr, Inputs};
 
 pub fn main() {
-    println!("HERE");
-
     let f1 = Fr::from(13);
     let f2 = Fr::from(27);
 
@@ -47,15 +45,31 @@ pub fn main() {
     };
     println!("output: {:?}", output);
 
-    // G1 Sum
+    // Sum multiple G1 points
     {
-        let out = G1Affine::from_repr(&output);
-        let expect: G1Affine = (a1 + b1 * Fr::from(3)).into();
-        // let expect: G1Affine = (a1 + b1).into();
-        println!("out={out:?}");
-        println!("expect={expect:?}");
-        assert_eq!(expect, out);
+        // Must be consistent with guest-side lib.rs
+        // (2 works, 3 breaks)
+        const NUM_ITERATIONS: u32 = 3;
+
+        let expect = {
+            let now = Instant::now();
+            let ab1: G1Affine = (a1 + b1 * Fr::from(NUM_ITERATIONS)).into();
+            let elapsed = now.elapsed();
+            println!("native G1 add: {elapsed:?}");
+            ab1
+        };
+
+        let output = G1Affine::from_repr(&output);
+        println!("output: {output:?}");
+
+        println!("expect: {expect:?}");
+        assert_eq!(expect, output);
     }
+
+    // TO RUN THIS EXPERIMENT INSTEAD:
+    // - comment the above code block
+    // - uncomment this code block
+    // - see guest-side lib.rs and make the equivalent changes
 
     // 2-pairing
     // {

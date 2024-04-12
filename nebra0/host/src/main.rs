@@ -76,11 +76,13 @@ fn main() {
         x2_minus_x1_inv.to_repr(),
     );
     // let inputs = [fqa.to_repr(), fqb.to_repr()];
+    let now = Instant::now();
     let env = ExecutorEnv::builder()
         .write(&inputs)
         .unwrap()
         .build()
         .unwrap();
+    println!("building time: {:?}", now.elapsed());
 
     // println!("e(a1,a2).e(b1,b2): {pairing_result:?}");
 
@@ -97,7 +99,9 @@ fn main() {
     let prover = default_prover();
 
     // Produce a receipt by proving the specified ELF binary.
+    let now = Instant::now();
     let receipt = prover.prove(env, NEBRA0_GUEST_ELF).unwrap();
+    println!("proving time: {:?}", now.elapsed());
 
     // TODO: Implement code for retrieving receipt journal here.
 
@@ -128,10 +132,30 @@ fn main() {
     // }
 
     // Sum G1 points
+    // {
+    //     let expect = {
+    //         let now = Instant::now();
+    //         let ab1: G1Affine = (a1 + b1).into();
+    //         let elapsed = now.elapsed();
+    //         println!("native G1 add: {elapsed:?}");
+    //         ab1
+    //     };
+
+    //     let output_repr: <G1Affine as HasRepr>::Repr = receipt.journal.decode().unwrap();
+    //     let output = G1Affine::from_repr(&output_repr);
+    //     println!("output: {output:?}");
+
+    //     println!("expect: {expect:?}");
+    //     assert_eq!(expect, output);
+    // }
+
+    // Sum multiple G1 points
     {
+        const NUM_ITERATIONS: u32 = 1;
+
         let expect = {
             let now = Instant::now();
-            let ab1: G1Affine = (a1 + b1).into();
+            let ab1: G1Affine = (a1 + b1 * Fr::from(NUM_ITERATIONS)).into();
             let elapsed = now.elapsed();
             println!("native G1 add: {elapsed:?}");
             ab1
