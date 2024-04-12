@@ -15,18 +15,7 @@ const ELF: &[u8] = include_bytes!("../../program/elf/riscv32im-succinct-zkvm-elf
 fn main() {
     utils::setup_logger();
 
-    // Generate proof.
     let mut stdin = SP1Stdin::new();
-
-    // let n = 186u32;
-    // stdin.write(&n);
-    // let mut proof = SP1Prover::prove(ELF, stdin).expect("proving failed");
-
-    // // Read output.
-    // let a = proof.public_values.read::<u128>();
-    // let b = proof.public_values.read::<u128>();
-    // println!("a: {}", a);
-    // println!("b: {}", b);
 
     // // Verify proof.
     // SP1Verifier::verify(ELF, &proof).expect("verification failed");
@@ -53,6 +42,7 @@ fn main() {
         (b1.x - a1.x).to_repr(),
     );
 
+    println!("inputs: {:?}", inputs);
     stdin.write(&inputs);
     let mut public_values = {
         if env::var("SP1_DEV_MODE") == Ok("1".to_string()) {
@@ -60,16 +50,38 @@ fn main() {
             SP1Prover::execute(ELF, stdin).expect("execution failed")
         } else {
             println!("FULL PROVER MODE");
-            let mut proof = SP1Prover::prove(ELF, stdin).expect("proving failed");
+            let now = Instant::now();
+            let proof = SP1Prover::prove(ELF, stdin).expect("proving failed");
+            println!("proving time: {:?}", now.elapsed());
             proof.public_values
         }
     };
 
     // Sum G1 points and check
+    // {
+    //     let expect = {
+    //         let now = Instant::now();
+    //         let ab1: G1Affine = (a1 + b1).into();
+    //         let elapsed = now.elapsed();
+    //         println!("native G1 add: {elapsed:?}");
+    //         ab1
+    //     };
+
+    //     let output_repr: <G1Affine as HasRepr>::Repr = public_values.read();
+    //     let output = G1Affine::from_repr(&output_repr);
+    //     println!("output: {output:?}");
+
+    //     println!("expect: {expect:?}");
+    //     assert_eq!(expect, output);
+    // }
+
+    // Sum multiple G1 points
     {
+        const NUM_ITERATIONS: u32 = 10;
+
         let expect = {
             let now = Instant::now();
-            let ab1: G1Affine = (a1 + b1).into();
+            let ab1: G1Affine = (a1 + b1 * Fr::from(NUM_ITERATIONS)).into();
             let elapsed = now.elapsed();
             println!("native G1 add: {elapsed:?}");
             ab1

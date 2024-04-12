@@ -11,20 +11,12 @@ use ark_ff::{Field, One};
 use risc0_zkvm::guest::env;
 use shared::{
     field::{add_mod_q, inv_mod_q, u256_from_u64s, MyFq, Q},
-    HasRepr, Inputs,
+    g1_add_refs_affine, HasRepr, Inputs,
 };
 // use serde::{Deserialize, Serialize};
 use crypto_bigint::U256;
 
 risc0_zkvm::guest::entry!(main);
-
-fn sum_refs(a: &G1Projective, b: &G1Projective) -> G1Projective {
-    a + b
-}
-
-fn sum_vals(a: G1Projective, b: G1Projective) -> G1Projective {
-    a + b
-}
 
 fn g1_add(a: &[MyFq; 2], b: &[MyFq; 2]) -> [MyFq; 2] {
     let x1 = &a[0];
@@ -90,10 +82,10 @@ fn main() {
 
     let inputs: Inputs = env::read();
 
-    let a1 = G1Affine::from_repr(&inputs.0).into_group();
-    let a2 = G2Affine::from_repr(&inputs.1).into_group();
-    let b1 = G1Affine::from_repr(&inputs.2).into_group();
-    let b2 = G2Affine::from_repr(&inputs.3).into_group();
+    let a1 = G1Affine::from_repr(&inputs.0);
+    let a2 = G2Affine::from_repr(&inputs.1);
+    let b1 = G1Affine::from_repr(&inputs.2);
+    let b2 = G2Affine::from_repr(&inputs.3);
 
     let a1_x_bigint = u256_from_u64s(&inputs.0[0]);
     let a1_y_bigint = u256_from_u64s(&inputs.0[1]);
@@ -160,29 +152,65 @@ fn main() {
     // }
 
     // Sum G1 points
-    {
-        let x6 = env::cycle_count();
-        // ark_bn254 (refs)
-        // let ab1_refs = sum_refs(&a1, &b1);
+    // {
+    //     let x6 = env::cycle_count();
+    //     // ark_bn254 (refs)
+    //     // let ab = sum_refs(&a1, &b1);
 
-        // let ab1_vals = sum_vals(a1, b1);
+    //     // let ab = sum_vals(a1, b1);
+
+    //     // With Residue
+
+    //     let ab_residue = g1_add(&a1_residue, &b1_residue);
+    //     // let ab_residue = g1_add_with_hint(&a1_residue, &b1_residue, &a1_plus_b1_hint);
+
+    //     let x7 = env::cycle_count();
+
+    //     // env::commit(&ab.to_repr());
+
+    //     env::commit(&[
+    //         ab_residue[0].as_montgomery().to_words(),
+    //         ab_residue[1].as_montgomery().to_words(),
+    //     ]);
+
+    //     println!("cycles: {}", x7 - x6);
+    // }
+
+    // G1 (affine) add * 10
+    {
+        const NUM_ITERATIONS: u32 = 1;
+
+        // ark_bn256
+        {
+            let mut ab_sum = a1;
+            let x6 = env::cycle_count();
+            for _ in 0..NUM_ITERATIONS {
+                ab_sum = g1_add_refs_affine(&ab_sum, &b1);
+            }
+            let x7 = env::cycle_count();
+
+            env::commit(&ab_sum.to_repr());
+            println!("cycles: {}", x7 - x6);
+        }
 
         // With Residue
+        // {
+        //     let mut ab_sum = a1_residue;
+        //     let x6 = env::cycle_count();
+        //     for _ in 0..10 {
+        //         // NOTE: could be more efficient with in-place add, but for now the
+        //         // goal is not to get the most efficient possible impl of G1, but
+        //         // rather get time estimates for various worklodas..
+        //         ab_sum = g1_add(&ab_sum, &b1_residue);
+        //     }
+        //     let x7 = env::cycle_count();
 
-        // let ab_residue = g1_add(&a1_residue, &b1_residue);
-        let ab_residue = g1_add_with_hint(&a1_residue, &b1_residue, &a1_plus_b1_hint);
-
-        let x7 = env::cycle_count();
-
-        let ab1: G1Affine = ab1_refs.into();
-        env::commit(&ab1.to_repr());
-
-        // env::commit(&[
-        //     ab_residue[0].as_montgomery().to_words(),
-        //     ab_residue[1].as_montgomery().to_words(),
-        // ]);
-
-        println!("cycles: {}", x7 - x6);
+        //     env::commit(&[
+        //         ab_sum[0].as_montgomery().to_words(),
+        //         ab_sum[1].as_montgomery().to_words(),
+        //     ]);
+        //     println!("cycles: {}", x7 - x6);
+        // }
     }
 
     // 2-pairing
