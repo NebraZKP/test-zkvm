@@ -19,7 +19,7 @@ opt-level = 3
 ark-bn254 = "0.4.0"
 ark-ec = "0.4.2"
 ark-ff = "0.4.2"
-shared = { path = "../../shared" }
+shared = { path = "../../../shared" }
 # If you want to try (experimental) std support, add `features = [ "std" ]` to risc0-zkvm
 risc0-zkvm = { version = "0.21.0", default-features = false, features = ["std"] }
 ark-std = { version = "0.4.0", default-features=false }

@@ -151,7 +151,7 @@ fn main() {
 
     // Sum multiple G1 points
     {
-        const NUM_ITERATIONS: u32 = 1;
+        const NUM_ITERATIONS: u32 = 10;
 
         let expect = {
             let now = Instant::now();

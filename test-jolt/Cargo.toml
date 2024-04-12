@@ -15,7 +15,7 @@ lto = "fat"
 jolt = { package = "jolt-sdk", git = "https://github.com/a16z/jolt", features = ["std"] }
 # jolt-sdk = { path = "../../jolt/jolt-sdk", features = ["std"] }
 guest = { path = "./guest" }
-shared = { path = "../nebra0/shared" }
+shared = { path = "../shared" }
 ark-bn254 = "0.4.0"
 rand = "0.8.5"
 ark-ff = "0.4.2"
