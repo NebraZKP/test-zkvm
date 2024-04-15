@@ -1,3 +1,6 @@
 [submodule "ahash"]
 	path = ahash
 	url = ../aHash.git
+[submodule "ark-algebra"]
+	path = ark-algebra
+	url = ../../arkworks-rs/algebra.git
