@@ -13,3 +13,8 @@ lto = true
 [patch.crates-io.crypto-bigint]
 git = "https://github.com/risc0/RustCrypto-crypto-bigint"
 tag = "v0.5.5-risczero.0"
+
+# [patch.crates-io]
+# ark-ff = { path = "../ark-algebra/ff" }
+# ark-poly = { path = "../ark-algebra/poly" }
+# ark-ec = { path = "../ark-algebra/ec" }

@@ -5,6 +5,7 @@ use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
 use ark_ff::{BigInt, Fp, Fp2, Fp2Config, FpConfig, PrimeField};
 
 pub mod field;
+pub mod backend;
 
 /// An object which has a representation in terms of primitive serializable
 /// objects.
