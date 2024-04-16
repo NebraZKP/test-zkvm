@@ -8,3 +8,9 @@ risc0-build = { version = "0.21.0" }
 
 [package.metadata.risc0]
 methods = ["guest"]
+
+# [patch.crates-io]
+# ark-ff = { path = "../../ark-algebra/ff" }
+# ark-poly = { path = "../../ark-algebra/poly" }
+# ark-ec = { path = "../../ark-algebra/ec" }
+# ark-bn254 = { path = "../../ark-curves/bn254" }

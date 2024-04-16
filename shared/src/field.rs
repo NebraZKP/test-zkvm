@@ -2,7 +2,7 @@
 // use crypto_bigint::risc0;
 use crypto_bigint::{
     impl_modulus,
-    modular::constant_mod::{self, Residue, ResidueParams},
+    modular::constant_mod::{Residue, ResidueParams},
     U256,
 };
 
