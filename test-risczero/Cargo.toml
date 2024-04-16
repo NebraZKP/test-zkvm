@@ -18,3 +18,4 @@ tag = "v0.5.5-risczero.0"
 # ark-ff = { path = "../ark-algebra/ff" }
 # ark-poly = { path = "../ark-algebra/poly" }
 # ark-ec = { path = "../ark-algebra/ec" }
+# ark-bn254 = { path = "../ark-curves/bn254" }

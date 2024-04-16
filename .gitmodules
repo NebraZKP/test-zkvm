@@ -4,3 +4,6 @@
 [submodule "ark-algebra"]
 	path = ark-algebra
 	url = ../algebra.git
+[submodule "ark-curves"]
+	path = ark-curves
+	url = ../curves.git

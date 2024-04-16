@@ -100,8 +100,8 @@ fn main() {
     let b1_residue = [b1_x_residue, b1_y_residue];
     let a1_plus_b1_hint = MyFq::new(&u256_from_u64s(&inputs.4));
 
-    let a1_x = a1.x;
-    let a1_y = a1.y;
+    let a1_x: Fq = a1.x;
+    let a1_y: Fq = a1.y;
 
     // Invert input[0]
     // {
