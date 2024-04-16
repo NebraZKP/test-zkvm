@@ -1,11 +1,12 @@
-#![no_std] // std support is experimental
+// #[cfg(target_vendor = "unknown")]
+// #![no_std] // std support is experimental
 
 use ark_bn254::{Fq, G1Affine, G1Projective, G2Affine};
 use ark_ec::short_weierstrass::{Affine, SWCurveConfig};
 use ark_ff::{BigInt, Fp, Fp2, Fp2Config, FpConfig, PrimeField};
 
-pub mod field;
 pub mod backend;
+pub mod field;
 
 /// An object which has a representation in terms of primitive serializable
 /// objects.
