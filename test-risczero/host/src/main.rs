@@ -8,7 +8,7 @@ use ark_ff::{Field, One, UniformRand};
 use methods::{NEBRA0_GUEST_ELF, NEBRA0_GUEST_ID};
 use rand::rngs::OsRng;
 use risc0_zkvm::{default_prover, ExecutorEnv};
-use shared::{fp_from_u32s, HasRepr, Inputs};
+use shared::{backend, fp_from_u32s, HasRepr, Inputs};
 
 fn main() {
     // Initialize tracing. In order to view logs, run `RUST_LOG=info cargo run`
@@ -121,15 +121,13 @@ fn main() {
     // }
 
     // Mul Fq values
-    // {
-    //     let expect = a1.x * a1.y;
-    //     // let expect = fqa * fqb;
-    //     // let output_repr: [u64; 4] = receipt.journal.decode().unwrap();
-    //     let output_repr: [u32; 8] = receipt.journal.decode().unwrap();
-    //     let actual: Fq = fp_from_u32s(&output_repr);
-    //     assert_eq!(expect, actual);
-    //     println!("expect: {expect:?}: {actual:?}",);
-    // }
+    {
+        let expect = a1.x * a1.y;
+        let output_repr: [u32; 8] = receipt.journal.decode().unwrap();
+        let actual: Fq = fp_from_u32s(&output_repr);
+        assert_eq!(expect, actual);
+        println!("expect: {expect:?}: {actual:?}",);
+    }
 
     // Sum G1 points
     // {
@@ -150,24 +148,24 @@ fn main() {
     // }
 
     // Sum multiple G1 points
-    {
-        const NUM_ITERATIONS: u32 = 10;
+    // {
+    //     const NUM_ITERATIONS: u32 = 10;
 
-        let expect = {
-            let now = Instant::now();
-            let ab1: G1Affine = (a1 + b1 * Fr::from(NUM_ITERATIONS)).into();
-            let elapsed = now.elapsed();
-            println!("native G1 add: {elapsed:?}");
-            ab1
-        };
+    //     let expect = {
+    //         let now = Instant::now();
+    //         let ab1: G1Affine = (a1 + b1 * Fr::from(NUM_ITERATIONS)).into();
+    //         let elapsed = now.elapsed();
+    //         println!("native G1 add: {elapsed:?}");
+    //         ab1
+    //     };
 
-        let output_repr: <G1Affine as HasRepr>::Repr = receipt.journal.decode().unwrap();
-        let output = G1Affine::from_repr(&output_repr);
-        println!("output: {output:?}");
+    //     let output_repr: <G1Affine as HasRepr>::Repr = receipt.journal.decode().unwrap();
+    //     let output = G1Affine::from_repr(&output_repr);
+    //     println!("output: {output:?}");
 
-        println!("expect: {expect:?}");
-        assert_eq!(expect, output);
-    }
+    //     println!("expect: {expect:?}");
+    //     assert_eq!(expect, output);
+    // }
 
     // 2-pairing
     // {

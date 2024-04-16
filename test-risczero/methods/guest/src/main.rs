@@ -10,6 +10,7 @@ use ark_ec::{pairing::Pairing, AffineRepr};
 use ark_ff::{Field, One};
 use risc0_zkvm::guest::env;
 use shared::{
+    backend,
     field::{add_mod_q, inv_mod_q, u256_from_u64s, MyFq, Q},
     g1_add_refs_affine, HasRepr, Inputs,
 };
@@ -120,36 +121,44 @@ fn main() {
     // }
 
     // Mul Fq values
-    // {
-    //     let x6 = env::cycle_count();
+    {
+        let x6 = env::cycle_count();
 
-    //     // Naive
-    //     let r_naive = a1_x * a1_y;
-    //     // let r_naive_0 = a1_y * a1_x;
-    //     // let r_naive_1 = a1_x * r_naive_0;
-    //     // let r_naive_2 = a1_x * r_naive_1;
-    //     // let r_naive_3 = a1_x * r_naive_2;
+        // Naive
+        // let r_naive = a1_x * a1_y;
+        // let r_naive_0 = a1_y * a1_x;
+        // let r_naive_1 = a1_x * r_naive_0;
+        // let r_naive_2 = a1_x * r_naive_1;
+        // let r_naive_3 = a1_x * r_naive_2;
 
-    //     // let r = mul_mod_q(&a1_x_bigint, &a1_y_bigint);
+        // let r = mul_mod_q(&a1_x_bigint, &a1_y_bigint);
 
-    //     // Syscall
-    //     // let r = risc0::modmul_u256(&a1_x_bigint, &a1_y_bigint, &Q);
+        // Syscall
+        // let r = risc0::modmul_u256(&a1_x_bigint, &a1_y_bigint, &Q);
 
-    //     // Syscall via Residue
-    //     // let r = a1_x_residue * a1_y_residue;
+        // Syscall via Residue
+        // let r = a1_x_residue * a1_y_residue;
 
-    //     let x7 = env::cycle_count();
+        // backend::Fq
+        let r_backend = {
+            let a1_x = <backend::Fq as HasRepr>::from_repr(&inputs.0[0]);
+            let a1_y = <backend::Fq as HasRepr>::from_repr(&inputs.0[1]);
+            a1_x * a1_y
+        };
 
-    //     // env::commit(&r.as_montgomery().to_words());
-    //     // env::commit(&r.to_words());
-    //     env::commit(&r_naive.to_repr());
-    //     env::commit(&r_naive_0.to_repr());
-    //     env::commit(&r_naive_1.to_repr());
-    //     env::commit(&r_naive_2.to_repr());
-    //     env::commit(&r_naive_3.to_repr());
+        let x7 = env::cycle_count();
 
-    //     println!("cycles: {}", x7 - x6);
-    // }
+        // env::commit(&r.as_montgomery().to_words());
+        // env::commit(&r.to_words());
+        // env::commit(&r_naive.to_repr());
+        // env::commit(&r_naive_0.to_repr());
+        // env::commit(&r_naive_1.to_repr());
+        // env::commit(&r_naive_2.to_repr());
+        // env::commit(&r_naive_3.to_repr());
+        env::commit(&r_backend.to_repr());
+
+        println!("cycles: {}", x7 - x6);
+    }
 
     // Sum G1 points
     // {
@@ -177,41 +186,41 @@ fn main() {
     // }
 
     // G1 (affine) add * 10
-    {
-        const NUM_ITERATIONS: u32 = 10;
+    // {
+    //     const NUM_ITERATIONS: u32 = 10;
 
-        // ark_bn256
-        {
-            let mut ab_sum = a1;
-            let x6 = env::cycle_count();
-            for _ in 0..NUM_ITERATIONS {
-                ab_sum = g1_add_refs_affine(&ab_sum, &b1);
-            }
-            let x7 = env::cycle_count();
+    //     // ark_bn256
+    //     {
+    //         let mut ab_sum = a1;
+    //         let x6 = env::cycle_count();
+    //         for _ in 0..NUM_ITERATIONS {
+    //             ab_sum = g1_add_refs_affine(&ab_sum, &b1);
+    //         }
+    //         let x7 = env::cycle_count();
 
-            env::commit(&ab_sum.to_repr());
-            println!("cycles: {}", x7 - x6);
-        }
+    //         env::commit(&ab_sum.to_repr());
+    //         println!("cycles: {}", x7 - x6);
+    //     }
 
-        // With Residue
-        // {
-        //     let mut ab_sum = a1_residue;
-        //     let x6 = env::cycle_count();
-        //     for _ in 0..10 {
-        //         // NOTE: could be more efficient with in-place add, but for now the
-        //         // goal is not to get the most efficient possible impl of G1, but
-        //         // rather get time estimates for various worklodas..
-        //         ab_sum = g1_add(&ab_sum, &b1_residue);
-        //     }
-        //     let x7 = env::cycle_count();
+    //     // With Residue
+    //     // {
+    //     //     let mut ab_sum = a1_residue;
+    //     //     let x6 = env::cycle_count();
+    //     //     for _ in 0..10 {
+    //     //         // NOTE: could be more efficient with in-place add, but for now the
+    //     //         // goal is not to get the most efficient possible impl of G1, but
+    //     //         // rather get time estimates for various worklodas..
+    //     //         ab_sum = g1_add(&ab_sum, &b1_residue);
+    //     //     }
+    //     //     let x7 = env::cycle_count();
 
-        //     env::commit(&[
-        //         ab_sum[0].as_montgomery().to_words(),
-        //         ab_sum[1].as_montgomery().to_words(),
-        //     ]);
-        //     println!("cycles: {}", x7 - x6);
-        // }
-    }
+    //     //     env::commit(&[
+    //     //         ab_sum[0].as_montgomery().to_words(),
+    //     //         ab_sum[1].as_montgomery().to_words(),
+    //     //     ]);
+    //     //     println!("cycles: {}", x7 - x6);
+    //     // }
+    // }
 
     // 2-pairing
     // {
