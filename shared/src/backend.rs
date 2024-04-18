@@ -1,19 +1,19 @@
-use ark_ff::{
-    BigInt, BigInteger, Field, Fp, Fp256, FpConfig, MontBackend, PrimeField, SqrtPrecomputation,
-    Zero,
-};
-use core::marker::PhantomData;
+// use ark_ff::{
+//     BigInt, BigInteger, Field, Fp, Fp256, FpConfig, MontBackend, PrimeField, SqrtPrecomputation,
+//     Zero,
+// };
+// use core::marker::PhantomData;
 
-#[cfg(target_vendor = "risc0")]
-extern "C" {
-    fn sys_bigint(
-        result: *mut [u32; 8],
-        op: u32,
-        x: *const [u32; 8],
-        y: *const [u32; 8],
-        modulus: *const [u32; 8],
-    );
-}
+// #[cfg(target_vendor = "risc0")]
+// extern "C" {
+//     fn sys_bigint(
+//         result: *mut [u32; 8],
+//         op: u32,
+//         x: *const [u32; 8],
+//         y: *const [u32; 8],
+//         modulus: *const [u32; 8],
+//     );
+// }
 
 // #[derive(MontConfig)]
 // #[modulus = "21888242871839275222246405745257275088696311157297823662689037894645226208583"]

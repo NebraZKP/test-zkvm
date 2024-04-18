@@ -7,6 +7,7 @@ use ark_ff::{BigInt, Fp, Fp2, Fp2Config, FpConfig, PrimeField};
 
 pub mod backend;
 pub mod field;
+pub mod halo2curvesfn;
 
 /// An object which has a representation in terms of primitive serializable
 /// objects.
