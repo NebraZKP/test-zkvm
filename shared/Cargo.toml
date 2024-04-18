@@ -14,6 +14,8 @@ ark-ff = { version = "0.4.2", default-features = false }
 # ark-ff = { path = "../ark-algebra/ff", default-features = false }
 
 crypto-bigint = { version = "0.5.5-risczero.0", default-features=false }
+ff = { version = "0.13.0", default-features = false }
+halo2curves = { version = "0.6.1", default-features = false }
 
 [patch.crates-io.crypto-bigint]
 git = "https://github.com/risc0/RustCrypto-crypto-bigint"

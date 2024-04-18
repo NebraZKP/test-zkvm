@@ -121,13 +121,13 @@ fn main() {
     // }
 
     // Mul Fq values
-    {
-        let expect = a1.x * a1.y;
-        let output_repr: [u32; 8] = receipt.journal.decode().unwrap();
-        let actual: Fq = fp_from_u32s(&output_repr);
-        assert_eq!(expect, actual);
-        println!("expect: {expect:?}: {actual:?}",);
-    }
+    // {
+    //     let expect = a1.x * a1.y;
+    //     let output_repr: [u32; 8] = receipt.journal.decode().unwrap();
+    //     let actual: Fq = fp_from_u32s(&output_repr);
+    //     assert_eq!(expect, actual);
+    //     println!("expect: {expect:?}: {actual:?}",);
+    // }
 
     // Sum G1 points
     // {
@@ -168,12 +168,12 @@ fn main() {
     // }
 
     // 2-pairing
-    // {
-    //     let output: <Fq as HasRepr>::Repr = receipt.journal.decode().unwrap();
-    //     let result_0 = Fq::from_repr(&output);
-    //     println!("result_0: {result_0:?}");
-    //     assert_eq!(result_0, Fq::one());
-    // }
+    {
+        let output: <Fq as HasRepr>::Repr = receipt.journal.decode().unwrap();
+        let result_0 = Fq::from_repr(&output);
+        println!("result_0: {result_0:?}");
+        assert_eq!(result_0, Fq::one());
+    }
 
     // The receipt was verified at the end of proving, but the below code is 2an
     // example of how someone else could verify this receipt.

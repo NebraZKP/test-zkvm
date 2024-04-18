@@ -11,13 +11,31 @@ use ark_ff::{Field, One};
 use risc0_zkvm::guest::env;
 use shared::{
     backend,
-    field::{add_mod_q, inv_mod_q, u256_from_u64s, MyFq, Q},
-    g1_add_refs_affine, HasRepr, Inputs,
+    field::{add_mod_q, inv_mod_q, u256_from_u64s, MyFq},
+    g1_add_refs_affine, halo2curvesfn, HasRepr, Inputs,
 };
 // use serde::{Deserialize, Serialize};
 use crypto_bigint::U256;
 
 risc0_zkvm::guest::entry!(main);
+
+extern "C" {
+    /// The risc0 syscall for mulmod
+    fn sys_bigint(
+        result: *mut [u64; 4],
+        op: u32,
+        x: *const [u64; 4],
+        y: *const [u64; 4],
+        modulus: *const [u64; 4],
+    );
+}
+
+const Q: [u64; 4] = [
+    4332616871279656263,
+    10917124144477883021,
+    13281191951274694749,
+    3486998266802970665,
+];
 
 fn g1_add(a: &[MyFq; 2], b: &[MyFq; 2]) -> [MyFq; 2] {
     let x1 = &a[0];
@@ -88,20 +106,20 @@ fn main() {
     let b1 = G1Affine::from_repr(&inputs.2);
     let b2 = G2Affine::from_repr(&inputs.3);
 
-    let a1_x_bigint = u256_from_u64s(&inputs.0[0]);
-    let a1_y_bigint = u256_from_u64s(&inputs.0[1]);
+    // let a1_x_bigint = u256_from_u64s(&inputs.0[0]);
+    // let a1_y_bigint = u256_from_u64s(&inputs.0[1]);
 
-    let a1_x_residue = MyFq::new(&a1_x_bigint);
-    let a1_y_residue = MyFq::new(&a1_y_bigint);
-    let b1_x_residue = MyFq::new(&u256_from_u64s(&inputs.2[0]));
-    let b1_y_residue = MyFq::new(&u256_from_u64s(&inputs.2[1]));
+    // let a1_x_residue = MyFq::new(&a1_x_bigint);
+    // let a1_y_residue = MyFq::new(&a1_y_bigint);
+    // let b1_x_residue = MyFq::new(&u256_from_u64s(&inputs.2[0]));
+    // let b1_y_residue = MyFq::new(&u256_from_u64s(&inputs.2[1]));
 
-    let a1_residue = [a1_x_residue, a1_y_residue];
-    let b1_residue = [b1_x_residue, b1_y_residue];
-    let a1_plus_b1_hint = MyFq::new(&u256_from_u64s(&inputs.4));
+    // let a1_residue = [a1_x_residue, a1_y_residue];
+    // let b1_residue = [b1_x_residue, b1_y_residue];
+    // let a1_plus_b1_hint = MyFq::new(&u256_from_u64s(&inputs.4));
 
-    let a1_x: Fq = a1.x;
-    let a1_y: Fq = a1.y;
+    // let a1_x: Fq = a1.x;
+    // let a1_y: Fq = a1.y;
 
     // Invert input[0]
     // {
@@ -121,44 +139,57 @@ fn main() {
     // }
 
     // Mul Fq values
-    {
-        let x6 = env::cycle_count();
+    // {
+    //     let mut r = [0u64; 4];
 
-        // Naive
-        // let r_naive = a1_x * a1_y;
-        // let r_naive_0 = a1_y * a1_x;
-        // let r_naive_1 = a1_x * r_naive_0;
-        // let r_naive_2 = a1_x * r_naive_1;
-        // let r_naive_3 = a1_x * r_naive_2;
+    //     let x6 = std::hint::black_box(env::cycle_count());
 
-        // let r = mul_mod_q(&a1_x_bigint, &a1_y_bigint);
+    //     // Naive
+    //     // let r_naive = std::hint::black_box(a1_x * a1_y);
+    //     // let r_naive_0 = a1_y * a1_x;
+    //     // let r_naive_1 = a1_x * r_naive_0;
+    //     // let r_naive_2 = a1_x * r_naive_1;
+    //     // let r_naive_3 = a1_x * r_naive_2;
 
-        // Syscall
-        // let r = risc0::modmul_u256(&a1_x_bigint, &a1_y_bigint, &Q);
+    //     // let r = mul_mod_q(&a1_x_bigint, &a1_y_bigint);
 
-        // Syscall via Residue
-        // let r = a1_x_residue * a1_y_residue;
+    //     // Syscall via Residue class
+    //     // let r_residue = std::hint::black_box(a1_x_residue * a1_y_residue);
 
-        // backend::Fq
-        let r_backend = {
-            let a1_x = <backend::Fq as HasRepr>::from_repr(&inputs.0[0]);
-            let a1_y = <backend::Fq as HasRepr>::from_repr(&inputs.0[1]);
-            a1_x * a1_y
-        };
+    //     // Syscall
+    //     // let r = risc0::modmul_u256(&a1_x_bigint, &a1_y_bigint, &Q);
 
-        let x7 = env::cycle_count();
+    //     // Direct syscall
+    //     std::hint::black_box(unsafe {
+    //         let mod_ptr: *const [u64; 4] = &Q as *const [u64; 4];
+    //         let a_ptr: *const [u64; 4] = &inputs.0[0];
+    //         let b_ptr: *const [u64; 4] = &inputs.0[1];
+    //         let r_ptr: *mut [u64; 4] = &mut r;
+    //         sys_bigint(r_ptr, 0, a_ptr, b_ptr, mod_ptr);
+    //     });
 
-        // env::commit(&r.as_montgomery().to_words());
-        // env::commit(&r.to_words());
-        // env::commit(&r_naive.to_repr());
-        // env::commit(&r_naive_0.to_repr());
-        // env::commit(&r_naive_1.to_repr());
-        // env::commit(&r_naive_2.to_repr());
-        // env::commit(&r_naive_3.to_repr());
-        env::commit(&r_backend.to_repr());
+    //     // backend::Fq
+    //     // let r_backend = {
+    //     //     let a1_x = <backend::Fq as HasRepr>::from_repr(&inputs.0[0]);
+    //     //     let a1_y = <backend::Fq as HasRepr>::from_repr(&inputs.0[1]);
+    //     //     a1_x * a1_y
+    //     // };
 
-        println!("cycles: {}", x7 - x6);
-    }
+    //     let x7 = std::hint::black_box(env::cycle_count());
+
+    //     // env::commit(&r_residue.as_montgomery().to_words());
+    //     env::commit(&r);
+    //     // env::commit(&r_residue.to_words());
+
+    //     // env::commit(&r_naive.to_repr());
+    //     // env::commit(&r_naive_0.to_repr());
+    //     // env::commit(&r_naive_1.to_repr());
+    //     // env::commit(&r_naive_2.to_repr());
+    //     // env::commit(&r_naive_3.to_repr());
+    //     // env::commit(&r_backend.to_repr());
+
+    //     println!("cycles: {}", x7 - x6);
+    // }
 
     // Sum G1 points
     // {
@@ -223,24 +254,37 @@ fn main() {
     // }
 
     // 2-pairing
-    // {
-    //     let x6 = env::cycle_count();
-    //     let multi_miller_result = Bn254::multi_miller_loop(&[a1, b1], &[a2, b2]);
-    //     let pairing_result = Bn254::final_exponentiation(multi_miller_result);
-    //     let x7 = env::cycle_count();
+    {
+        // arkworks
+        {
+            let x6 = env::cycle_count();
+            let multi_miller_result = Bn254::multi_miller_loop(&[a1, b1], &[a2, b2]);
+            let pairing_result = Bn254::final_exponentiation(multi_miller_result);
+            let x7 = env::cycle_count();
 
-    //     // Check pairing result
-    //     if let Some(target_field_value) = pairing_result {
-    //         env::commit(&target_field_value.0.c0.c0.c0.to_repr());
+            // Check pairing result
+            if let Some(target_field_value) = pairing_result {
+                env::commit(&target_field_value.0.c0.c0.c0.to_repr());
 
-    //         // if target_field_value.0 == <<Bn254 as Pairing>::TargetField as One>::one() {
-    //         //     env::exit(0)
-    //         // }
-    //     }
-    //     // env::exit(1);
+                // if target_field_value.0 == <<Bn254 as Pairing>::TargetField as One>::one() {
+                //     env::exit(0)
+                // }
+            }
+            // env::exit(1);
 
-    //     println!("cycles: {}", x7 - x6);
-    // }
+            println!("cycles: {}", x7 - x6);
+        }
+
+        // halo2curves
+        // {
+        //     let x6 = env::cycle_count();
+        //     let r = halo2curvesfn::do_2_pairing(&inputs.0, &inputs.1, &inputs.2, &inputs.3);
+        //     let x7 = env::cycle_count();
+
+        //     env::commit(&r);
+        //     println!("cycles: {}", x7 - x6);
+        // }
+    }
 
     // env::log("f1_repr:");
     // env::write(f1.fmt());
